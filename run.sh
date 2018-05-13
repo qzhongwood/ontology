@@ -1,3 +1,4 @@
 #!/bin/bash
-go build
+rm ./ontology
+make > /dev/null
 ./ontology $@
