@@ -246,6 +246,10 @@ var (
 		Name:  "amount",
 		Usage: "Specifies `<amount>` as the transferred amount",
 	}
+	TransactionPasswordFlag = cli.StringFlag{
+		Name:  "password",
+		Usage: "Specifies `<password>` for the from <address>",
+	}
 	TransactionHashFlag = cli.StringFlag{
 		Name:  "hash",
 		Usage: "Transaction hash",

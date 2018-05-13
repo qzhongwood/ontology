@@ -34,6 +34,21 @@ var AssetCommand = cli.Command{
 	Description:  `asset control`,
 	Subcommands: []cli.Command{
 		{
+			Action:       signtx,
+			OnUsageError: cmdCom.CommonCommandErrorHandler,
+			Name:         "sign",
+			Usage:        "Sign a tx by an address",
+			ArgsUsage:    " ",
+			Description:  "Sign a tx by an address",
+			Flags: []cli.Flag{
+				utils.TransactionFromFlag,
+				utils.TransactionToFlag,
+				utils.TransactionAmountFlag,
+				utils.TransactionPasswordFlag,
+				utils.WalletFileFlag,
+			},
+		},
+		{
 			Action:       transfer,
 			OnUsageError: cmdCom.CommonCommandErrorHandler,
 			Name:         "transfer",
@@ -44,6 +59,7 @@ var AssetCommand = cli.Command{
 				utils.TransactionFromFlag,
 				utils.TransactionToFlag,
 				utils.TransactionAmountFlag,
+				utils.TransactionPasswordFlag,
 				utils.WalletFileFlag,
 			},
 		},
@@ -70,6 +86,49 @@ var AssetCommand = cli.Command{
 			},
 		},
 	},
+}
+
+func signtx(ctx *cli.Context) error {
+	if !ctx.IsSet(utils.TransactionToFlag.Name) || !ctx.IsSet(utils.TransactionAmountFlag.Name) {
+		return fmt.Errorf("Missing argument to or amount")
+	}
+
+	from := ctx.String(utils.TransactionFromFlag.Name)
+	to := ctx.String(utils.TransactionToFlag.Name)
+	amount := ctx.Uint(utils.TransactionAmountFlag.Name)
+
+	wallet, err := cmdCom.OpenWallet(ctx)
+	if err != nil {
+		return fmt.Errorf("OpenWallet error:%s", err)
+	}
+	var signer *account.Account
+	if from == "" {
+		signer = wallet.GetDefaultAccount()
+		if signer == nil {
+			return fmt.Errorf("Please specific from address correctly")
+		}
+	} else {
+		fromAddr, err := common.AddressFromBase58(from)
+		if err != nil {
+			return fmt.Errorf("Invalid from address:%s", from)
+		}
+		signer = wallet.GetAccountByAddress(fromAddr)
+		if signer == nil {
+			return fmt.Errorf("Cannot found account by address:%s", from)
+		}
+	}
+
+	fmt.Printf("From:%s\n", signer.Address.ToBase58())
+	fmt.Printf("To:%s\n", to)
+	fmt.Printf("Amount:%d\n", amount)
+
+	_, err = utils.SignTx(signer, to, amount)
+	if err != nil {
+		return fmt.Errorf("Transfer error:%s", err)
+	}
+	//fmt.Printf("Transfer ONT\n")
+	//fmt.Printf("TxHash:%s\n", txHash)
+	return nil
 }
 
 func transfer(ctx *cli.Context) error {
@@ -102,15 +161,13 @@ func transfer(ctx *cli.Context) error {
 		}
 	}
 
-	txHash, err := utils.Transfer(signer, to, amount)
+	_, err = utils.Transfer(signer, to, amount)
 	if err != nil {
 		return fmt.Errorf("Transfer error:%s", err)
 	}
-	fmt.Printf("Transfer ONT\n")
 	fmt.Printf("From:%s\n", signer.Address.ToBase58())
 	fmt.Printf("To:%s\n", to)
 	fmt.Printf("Amount:%d\n", amount)
-	fmt.Printf("TxHash:%s\n", txHash)
 	return nil
 }
 

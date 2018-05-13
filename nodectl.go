@@ -33,7 +33,7 @@ import (
 
 var Version string
 
-func main() {
+func main2() {
 	app := cli.NewApp()
 	app.Name = "nodectl"
 	app.Version = Version

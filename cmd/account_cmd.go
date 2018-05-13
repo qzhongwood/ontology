@@ -192,8 +192,10 @@ func accountCreate(ctx *cli.Context) error {
 	optionFile := checkFileName(ctx)
 	optionNumber := checkNumber(ctx)
 	optionLabel := checkLabel(ctx)
+	optionPassword := checkPassword(ctx)
 
-	pass, _ := password.GetConfirmedPassword()
+	//pass, _ := password.GetConfirmedPassword()
+	pass := []byte(optionPassword)
 
 	wallet := new(account.WalletData)
 	err := wallet.Load(optionFile)
@@ -208,9 +210,12 @@ func accountCreate(ctx *cli.Context) error {
 		wallet.AddAccount(acc)
 
 		fmt.Println()
+
 		fmt.Println("Label: ", acc.Label)
+		fmt.Printf("Password: %s \n", optionPassword)
 		fmt.Println("Address: ", acc.Address)
 		fmt.Println("Public key:", acc.PubKey)
+		fmt.Println("Private key:", acc.PriKey)
 		fmt.Println("Signature scheme:", acc.SigSch)
 	}
 	fmt.Println()
@@ -264,6 +269,7 @@ func accountShow(ctx *cli.Context) error {
 			fmt.Printf("	Curve: %v\n", acc.Param["curve"])
 			fmt.Printf("	Key length: %v bits\n", len(acc.Key)*8)
 			fmt.Printf("	Public key: %v\n", acc.PubKey)
+			fmt.Printf("	Pri key: %v\n", acc.PriKey)
 			fmt.Printf("	Signature scheme: %v\n", acc.SigSch)
 			fmt.Println()
 		}
@@ -567,6 +573,14 @@ func checkFileName(ctx *cli.Context) string {
 	} else {
 		//default account file name
 		return account.WALLET_FILENAME
+	}
+}
+func checkPassword(ctx *cli.Context) string {
+	if ctx.IsSet("password") {
+		return ctx.String("password")
+	} else {
+		//default account file name
+		return ""
 	}
 }
 func checkNumber(ctx *cli.Context) int {

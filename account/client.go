@@ -127,7 +127,7 @@ func (cl *ClientImpl) loadClient(passwordKey []byte) error {
 
 	for i, v := range cl.Accounts {
 		if !v.VerifyPassword(passwordKey) {
-			fmt.Println("error: incorrect password for account", i)
+			//fmt.Println("error: incorrect password for account", i)
 			continue
 		}
 		ac := new(Account)

@@ -79,10 +79,55 @@ func Transfer(signer *account.Account, to string, amount uint) (string, error) {
 	return SendRawTransaction(invokeTx)
 }
 
+
+//Transfer ont from account to another account
+func SignTx(signer *account.Account, to string, amount uint) (string, error) {
+	toAddr, err := common.AddressFromBase58(to)
+	if err != nil {
+		return "", fmt.Errorf("To address:%s invalid:%s", to, err)
+	}
+	buf := bytes.NewBuffer(nil)
+	var sts []*ont.State
+	sts = append(sts, &ont.State{
+		From:  signer.Address,
+		To:    toAddr,
+		Value: uint64(amount),
+	})
+	transfers := &ont.Transfers{
+		States: sts,
+	}
+	err = transfers.Serialize(buf)
+	if err != nil {
+		return "", fmt.Errorf("transfers.Serialize error %s", err)
+	}
+	crt := &cstates.Contract{
+		Address: genesis.OntContractAddress,
+		Method:  "transfer",
+		Args:    buf.Bytes(),
+	}
+	buf = bytes.NewBuffer(nil)
+	err = crt.Serialize(buf)
+	if err != nil {
+		return "", fmt.Errorf("Serialize contract error:%s", err)
+	}
+	invokeTx := NewInvokeTransaction(new(big.Int).SetInt64(0), vmtypes.Native, buf.Bytes())
+	err = SignTransaction(signer, invokeTx)
+
+	if err != nil {
+		return "", fmt.Errorf("SignTransaction error:%s", err)
+	}
+
+	return "", nil
+}
+
 func SignTransaction(signer *account.Account, tx *types.Transaction) error {
-	tx.Payer = signer.Address
 	txHash := tx.Hash()
+
+	fmt.Printf("Transaction Hash: <%x>\n", txHash)
 	sigData, err := sign(signer.SigScheme.Name(), txHash.ToArray(), signer)
+
+	fmt.Printf("Signed Transaction: <%x>\n", sigData)
+
 	if err != nil {
 		return fmt.Errorf("sign error:%s", err)
 	}

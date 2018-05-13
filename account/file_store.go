@@ -36,6 +36,7 @@ type AccountData struct {
 
 	Label     string `json:"label"`
 	PubKey    string `json:"publicKey"`
+	PriKey    string `json:"privateKey"`
 	SigSch    string `json:"signatureScheme"`
 	IsDefault bool   `json:"isDefault"`
 	Lock      bool   `json:"lock"`
@@ -74,6 +75,7 @@ func (this *AccountData) SetLabel(label string) {
 
 func CreateAccount(TypeCode keypair.KeyType, CurveCode byte, SchemeName string, password *[]byte) *AccountData {
 	prvkey, pubkey, _ := keypair.GenerateKeyPair(TypeCode, CurveCode)
+
 	ta := types.AddressFromPubKey(pubkey)
 	address := ta.ToBase58()
 
@@ -84,6 +86,7 @@ func CreateAccount(TypeCode keypair.KeyType, CurveCode byte, SchemeName string, 
 	acc.SetKeyPair(prvSecret)
 	acc.SigSch = SchemeName
 	acc.PubKey = hex.EncodeToString(keypair.SerializePublicKey(pubkey))
+	acc.PriKey = hex.EncodeToString(keypair.SerializePrivateKey(prvkey))
 	acc.PassHash = hex.EncodeToString(h[:])
 
 	return acc
